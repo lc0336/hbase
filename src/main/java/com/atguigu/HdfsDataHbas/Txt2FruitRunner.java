@@ -13,13 +13,10 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 
 /**
  * @program: hbase
- * @description:
+ * @description:  文档提报错，无法实现正确的提交
  * @author: li chao
  * @create: 2019-06-04 20:20
  * @Version 1.0
