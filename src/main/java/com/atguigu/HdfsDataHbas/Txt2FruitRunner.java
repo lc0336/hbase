@@ -16,7 +16,7 @@ import java.io.IOException;
 
 /**
  * @program: hbase
- * @description:  文档提报错，无法实现正确的提交
+ * @description:
  * @author: li chao
  * @create: 2019-06-04 20:20
  * @Version 1.0

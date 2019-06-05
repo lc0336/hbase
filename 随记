@@ -1,0 +1,120 @@
+一、Java客户端API
+
+1. Connection
+		代表和hbase集群的一个连接，包含zookeeper连接。
+		重量级初始化，建议一个应用只需要创建一个Connection对象。
+		线程安全，可以在多个线程共享。
+		手动执行close()方法，自己维护生命周期。
+		创建Admin:  Connection.getAdmin(),Admin执行DDL语句。
+		创建Table: Connection.getTable(),Table执行DML语句。
+
+		Connection的创建ConnectionFactory.createConnection();
+
+2. Admin
+		Admin执行DDL语句,执行表和库的增删改查。
+		Admin属于轻量级的初始化，Admin是线程不安全的，不能共享。
+		可以使用ThreadLocal保证一个线程中只创建一个当前线程使用的Admin对象。
+
+	库操作：
+			建库：  Admin.createNameSpace(NameSpaceDescriptor)
+			删除：  Admin.deleteteNameSpace(String 库名)
+			查看所有的库：NameSpaceDescriptor[] xxx = Admin.listNameSpace()
+
+	表操作：
+			判断表是否存在：Admin.tableExists(TableName x)
+			建表:  Admin.createTable(HTableDescriptor x)
+			删除: Admin.deleteTable(TableName x)
+
+3. NameSpaceDescriptor
+		库的描述。库的所有属性，都需要使用当前类来设置。
+
+4. TableName
+		代表一个表的名称。
+		TableName.valueof(String 表名)
+		TableName.valueof(String nsname,String 表名)
+
+5. HTableDescriptor
+		代表表的描述，表的所有属性，包括列族都要在HTableDescriptor中声明。
+
+		new HTableDescriptor(TableName x)
+
+		在HTableDescriptor，调用addFamily(HColumnDescriptor)
+
+6. HColumnDescriptor
+		代表列族的描述，列族的属性，可以在这个对象中声明。
+
+7. Table
+		代表一个表。可以执行DML语句。线程不安全的，不能共享。每个表应该有自己的Table。
+
+		new Table(TableName tn);
+
+		Put:  Table.put(Put x);
+			  Table.put(List<Put> x);
+
+		get： Table.get(Get x);
+				Table.get(List<Get> x);
+
+		scan : Table.getScaner(Scan scan)
+
+		delete : Table.delete(Delete x)
+
+
+
+8. Put:
+		代表一个rowkey的value部分。多个Cell（单元格）的集合。
+		Put.add(Cell cell);
+		Put.addColumn(byte [] family,byte [] quliefier ,long ts ,byte [] value)
+
+9. Get
+		代表查询一行内容的参数。  rowkey+value
+		get可以设置属性
+
+	Result result=	Table.get(Get x);
+
+10. Result
+		Results是一行中多个cell的集合。
+
+11. Scan
+		Scan代表多行查询的参数集合。
+		Scan需要设置查询的表名，多个列族，多个列，查询的版本号...
+
+12 . Delete
+		Delete代表删除操作的参数。
+
+		Delete可以删除某个列中具体版本的数据。新增一条type=DELETE类型的数据，而且时间戳为当前列中最大的时间戳。
+
+9. 工具类
+			Bytes:  可以将常用的数据类型和byte[]间转换
+						Bytes.toBytes(): 转为byte[]
+						Bytes.toxxx(): 转为某个类型
+
+			CellUtils:  操作Cell，获取cell中的属性（列族，列名，值...）
+					CellUtils.clonexxx(Cell x)
+
+二、在HBase中使用MR
+
+1. 在运行MR时，hadoop的mapreduce模块，需要持有当前hbase版本的jar包。
+
+2.  可以运行 hbase mapredcp 查看运行mr时，需要持有哪些jar包。
+		这些jar包起始都位于hbase/lib/*
+
+3. 编辑hadoop-env.sh, 编辑 HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$HBASE_HOME/lib/*
+
+4. 如果MR处理的是hbase中的数据。
+		从hbase中读数据：
+				使用TableInputFormat，可以从hbase中读取一行的数据。
+				将rowkey封装为ImmuteableBytesWriatlbe key，
+				一行的Result value，封装为值。
+
+		传入到Mapper，Mapper必须继承TableMapper。
+
+		将数据处理完，在写入到hbase，要求Reducer必须继承TableReducer，
+				使用TableOutputFormat
+
+		设置driver时，Configuration必须能够读取hbase-site.xml和hbase-default.xml.
+
+			调用HBaseConfiguration.create();
+
+		设置Mapper和Reducer参数时，提供了一个工具类
+			TableMapReducerUtil.initTableMapperJob();
+			TableMapReducerUtil.initTableReducerJob();
