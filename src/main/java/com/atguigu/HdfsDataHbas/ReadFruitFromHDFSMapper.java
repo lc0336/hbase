@@ -26,9 +26,19 @@ public class ReadFruitFromHDFSMapper extends Mapper<LongWritable, Text, Immutabl
         String[] values = lineValue.split("\t");
 
         //根据数据中值的含义取值
-        String rowKey = values[0];
-        String name = values[1];
-        String color = values[2];
+        String rowKey=null;
+        String name=null;
+        String color=null;
+
+        if (values[0]!=null){
+            rowKey = values[0];
+        }
+        if (values[1]!=null){
+            name = values[1];
+        }
+        if (values[2]!=null){
+            color = values[2];
+        }
 
         //初始化rowKey
         ImmutableBytesWritable rowKeyWritable = new ImmutableBytesWritable(Bytes.toBytes(rowKey));

@@ -1,13 +1,16 @@
 package com.atguigu.MapReduc;
 
 
+import com.atguigu.HdfsDataHbas.ReadFruitFromHDFSMapper;
+import com.atguigu.HdfsDataHbas.WriteFruitMRFromTxtReducer;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import java.io.IOException;
 
@@ -24,17 +27,19 @@ public class DataTransferDriver {
 
         Job job = Job.getInstance(configuration);
 
-        job.setJobName("hbasemr1");
+        job.setJobName("hbasemr2");
 
         job.setJarByClass(DataTransferDriver.class);
 
-        Scan scan = new Scan();
+        job.setMapperClass(ReadFruitFromHDFSMapper.class);
 
-        // 设置Job运行的各个组件和参数
-        TableMapReduceUtil.initTableMapperJob("fruit", scan,
-                ReadFruitMapper.class, ImmutableBytesWritable.class, Put.class, job);
+        job.setMapOutputKeyClass(ImmutableBytesWritable.class);
 
-        TableMapReduceUtil.initTableReducerJob("fruit_mr", DataTransferReducer.class, job);
+        job.setMapOutputValueClass(Put.class);
+
+        FileInputFormat.setInputPaths(job,new Path("hdfs://hadoop101:9000/fruit.tsv"));
+
+        TableMapReduceUtil.initTableReducerJob("fruit2", WriteFruitMRFromTxtReducer.class, job);
 
         job.waitForCompletion(true);
     }
